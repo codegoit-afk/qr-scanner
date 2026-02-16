@@ -3,136 +3,101 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CODE>ON Scanner PRO</title>
-    
+    <title>CODE>ON Scanner</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    
     <style>
-        body { 
-            font-family: 'Poppins', sans-serif; 
-            text-align: center; margin: 0; padding: 10px; 
-            background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
-            min-height: 100vh; display: flex; align-items: center; justify-content: center;
-        }
-        .container { 
-            width: 100%; max-width: 400px; background: #ffffff; 
-            padding: 25px 15px; border-radius: 24px; 
-            box-shadow: 0 15px 35px rgba(0,0,0,0.15); box-sizing: border-box;
-        }
-        .lang-switch { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; }
-        .lang-btn { 
-            padding: 5px 10px; font-size: 12px; border: 1px solid #ddd; 
-            border-radius: 15px; background: white; cursor: pointer; opacity: 0.6;
-        }
-        .lang-btn.active { opacity: 1; border-color: #3498db; background: #ebf5fb; font-weight: bold; }
-        
+        body { font-family: 'Poppins', sans-serif; margin: 0; padding: 10px; background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .container { width: 100%; max-width: 400px; background: #fff; padding: 20px; border-radius: 24px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); }
+        .lang-switch { display: flex; justify-content: center; gap: 8px; margin-bottom: 15px; }
+        .lang-btn { padding: 5px 12px; font-size: 12px; border: 1px solid #ddd; border-radius: 15px; background: #fff; cursor: pointer; }
+        .lang-btn.active { background: #3498db; color: #fff; border-color: #3498db; }
         .logo { font-size: 26px; font-weight: 700; margin-bottom: 15px; color: #2c3e50; }
         .logo span { color: #3498db; }
-        #reader { width: 100%; border-radius: 16px; overflow: hidden; border: 2px dashed #3498db !important; background: #f8f9fa; }
-        #scanned-list { 
-            list-style: none; padding: 10px; margin: 15px 0; 
-            max-height: 120px; overflow-y: auto; background: #f4f7f6; border-radius: 12px; 
-        }
-        #scanned-list li { 
-            padding: 8px; background: white; margin-bottom: 5px; border-radius: 8px; 
-            font-family: monospace; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-left: 4px solid #3498db;
-        }
+        #reader { width: 100%; border-radius: 16px; overflow: hidden; border: 2px dashed #3498db !important; background: #f8f9fa; min-height: 250px; }
+        #scanned-list { list-style: none; padding: 10px; margin: 15px 0; max-height: 120px; overflow-y: auto; background: #f4f7f6; border-radius: 12px; text-align: left; }
+        #scanned-list li { padding: 8px; background: #fff; margin-bottom: 5px; border-radius: 8px; font-family: monospace; font-size: 14px; border-left: 4px solid #3498db; }
         .buttons { display: flex; justify-content: space-between; margin-bottom: 15px; }
-        button { 
-            padding: 12px; border: none; background: linear-gradient(135deg, #3498db, #2980b9); 
-            color: white; border-radius: 25px; cursor: pointer; font-size: 15px; 
-            width: 48%; font-weight: 600; transition: all 0.2s;
-        }
+        button { padding: 12px; border: none; background: linear-gradient(135deg, #3498db, #2980b9); color: #fff; border-radius: 25px; cursor: pointer; font-size: 15px; width: 48%; font-weight: 600; }
         button.clear-btn { background: linear-gradient(135deg, #ff6b6b, #ee5253); }
-        #qrcode { display: flex; justify-content: center; margin-top: 15px; padding: 10px; background: white; border-radius: 16px; }
+        #qrcode { display: flex; justify-content: center; margin-top: 15px; }
+        #qrcode img { border-radius: 12px; padding: 10px; background: #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
-
 <div class="container">
     <div class="lang-switch">
-        <div class="lang-btn active" onclick="setLang('uk')">UA</div>
-        <div class="lang-btn" onclick="setLang('ru')">RU</div>
-        <div class="lang-btn" onclick="setLang('en')">EN</div>
+        <button class="lang-btn active" onclick="setLang('uk')">UA</button>
+        <button class="lang-btn" onclick="setLang('ru')">RU</button>
+        <button class="lang-btn" onclick="setLang('en')">EN</button>
     </div>
-
     <div class="logo">CODE<span>></span>ON</div>
-    
     <div id="reader"></div>
-
     <ul id="scanned-list"></ul>
-
     <div class="buttons">
         <button id="btn-make" onclick="generateQR()">Make QR</button>
         <button id="btn-clear" class="clear-btn" onclick="clearList()">Clear</button>
     </div>
-
     <div id="qrcode"></div>
 </div>
 
 <script>
     let scannedCodes = [];
     let currentLang = 'uk';
-
     const translations = {
-        uk: { make: "Зробити QR", clear: "Очистити", alert: "Спочатку відскануйте код!", placeholder: "Тут з'явиться список" },
-        ru: { make: "Создать QR", clear: "Очистить", alert: "Сначала отсканируйте код!", placeholder: "Здесь будет список" },
-        en: { make: "Make QR", clear: "Clear", alert: "Scan a code first!", placeholder: "List will appear here" }
+        uk: { make: "Зробити QR", clear: "Очистити", alert: "Список порожній!", placeholder: "Список порожній" },
+        ru: { make: "Создать QR", clear: "Очистить", alert: "Список пуст!", placeholder: "Список пуст" },
+        en: { make: "Make QR", clear: "Clear", alert: "List is empty!", placeholder: "List is empty" }
     };
 
     function setLang(lang) {
         currentLang = lang;
-        document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
-        event.target.classList.add('active');
+        document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.toggle('active', btn.innerText.toLowerCase() === lang));
         document.getElementById('btn-make').innerText = translations[lang].make;
         document.getElementById('btn-clear').innerText = translations[lang].clear;
         updateListUI();
     }
 
-    // Инициализация сканера с ПРИНУДИТЕЛЬНОЙ ЗАДНЕЙ КАМЕРОЙ
     const html5QrCode = new Html5Qrcode("reader");
-    const config = { fps: 10, qrbox: { width: 250, height: 150 } };
-
-    html5QrCode.start(
-        { facingMode: "environment" }, // "environment" заставляет использовать заднюю камеру
-        config,
-        (decodedText) => {
-            if (!scannedCodes.includes(decodedText)) {
-                scannedCodes.push(decodedText);
-                updateListUI();
-                // Виброотклик (если поддерживается)
-                if (navigator.vibrate) navigator.vibrate(100);
+    
+    // Функция запуска сканера с приоритетом задней камеры
+    function startScanner() {
+        const config = { fps: 10, qrbox: { width: 250, height: 150 } };
+        html5QrCode.start(
+            { facingMode: "environment" }, 
+            config, 
+            (decodedText) => {
+                if (!scannedCodes.includes(decodedText)) {
+                    scannedCodes.push(decodedText);
+                    updateListUI();
+                    if (navigator.vibrate) navigator.vibrate(70);
+                }
             }
-        }
-    ).catch(err => {
-        console.error("Ошибка камеры:", err);
-        // Если задняя не нашлась, пробуем любую доступную
-        html5QrCode.start({ facingMode: "user" }, config, (text) => {
-            if (!scannedCodes.includes(text)) { scannedCodes.push(text); updateListUI(); }
+        ).catch(err => {
+            // Если environment не сработал, запускаем дефолтную камеру
+            html5QrCode.start({ facingMode: "user" }, config, (decodedText) => {
+                if (!scannedCodes.includes(decodedText)) { scannedCodes.push(decodedText); updateListUI(); }
+            });
         });
-    });
+    }
 
     function updateListUI() {
-        const listElement = document.getElementById('scanned-list');
-        listElement.innerHTML = scannedCodes.length === 0 ? `<li style="border:none; color:#999">${translations[currentLang].placeholder}</li>` : ''; 
+        const list = document.getElementById('scanned-list');
+        list.innerHTML = scannedCodes.length ? '' : `<li style="border:none;color:#999;text-align:center">${translations[currentLang].placeholder}</li>`;
         scannedCodes.forEach(code => {
-            let li = document.createElement('li');
+            const li = document.createElement('li');
             li.innerText = code;
-            listElement.appendChild(li); 
+            list.appendChild(li);
         });
     }
 
     function generateQR() {
-        if (scannedCodes.length === 0) {
-            alert(translations[currentLang].alert);
-            return;
-        }
-        let finalString = scannedCodes.join('\n') + '\n';
+        if (!scannedCodes.length) return alert(translations[currentLang].alert);
         document.getElementById("qrcode").innerHTML = "";
         new QRCode(document.getElementById("qrcode"), {
-            text: finalString, width: 200, height: 200
+            text: scannedCodes.join('\n') + '\n',
+            width: 200, height: 200
         });
     }
 
@@ -141,9 +106,8 @@
         updateListUI();
         document.getElementById("qrcode").innerHTML = "";
     }
-    
-    updateListUI(); // Первичный запуск
-</script>
 
+    startScanner();
+</script>
 </body>
 </html>
