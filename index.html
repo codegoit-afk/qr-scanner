@@ -67,12 +67,11 @@
 
     async function startScanner() {
         const errorDiv = document.getElementById('error-msg');
-        const config = { fps: 15, qrbox: { width: 250, height: 150 } };
+        const config = { fps: 10, qrbox: { width: 250, height: 150 } };
         
         try {
-            // Сначала пробуем запросить доступ через браузерное API (важно для WebView)
-            await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-            
+            // Пробуем запустить без предварительного getUserMedia, 
+            // так как это может вызывать NotReadableError в WebView
             await html5QrCode.start(
                 { facingMode: "environment" }, 
                 config, 
@@ -85,14 +84,19 @@
                 }
             );
         } catch (err) {
+            console.error(err);
+            // Если NotReadableError - значит камера занята или заблокирована
             errorDiv.style.display = "block";
-            errorDiv.innerText = "Камера недоступна: " + err;
-            // Попытка №2: любая камера
-            html5QrCode.start({ facingMode: "user" }, config, (decodedText) => {
-                if (!scannedCodes.includes(decodedText)) { scannedCodes.push(decodedText); updateListUI(); }
-            }).catch(e => {
-                errorDiv.innerText = "Помилка доступу. Перевірте дозволи додатку!";
-            });
+            errorDiv.innerText = "Камера зайнята іншим додатком або заблокована. Перезапустіть телефон або закрийте камеру в браузері.";
+            
+            // Пробуем крайний вариант через 2 секунды
+            setTimeout(() => {
+                html5QrCode.start({ facingMode: "user" }, config, (text) => {
+                    scannedCodes.push(text); updateListUI();
+                }).catch(e => {
+                    errorDiv.innerText = "Критична помилка доступу. Використовуйте PWA версію (через браузер).";
+                });
+            }, 2000);
         }
     }
 
