@@ -89,7 +89,7 @@
     async function startScanner() {
         const errorDiv = document.getElementById('error-msg');
         const fallbackBtn = document.getElementById('btn-fallback');
-        // ЗМІНА ТУТ: Рамка тепер квадратна (250x250) для кращого захоплення 2D кодів (Data Matrix)
+        // Рамка квадратна (250x250) для 2D та 1D кодів
         const config = { fps: 10, qrbox: { width: 250, height: 250 } };
         
         try {
@@ -110,11 +110,38 @@
         e.target.value = '';
     });
 
+    // --- НОВА ФУНКЦІЯ: Звук "Пік!" ---
+    function playBeep() {
+        try {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContext) return;
+            const ctx = new AudioContext();
+            const osc = ctx.createOscillator();
+            const gainNode = ctx.createGain();
+            
+            osc.type = 'sine'; // Чистий тон
+            osc.frequency.setValueAtTime(800, ctx.currentTime); // Частота звуку
+            
+            gainNode.gain.setValueAtTime(0.1, ctx.currentTime); // Гучність
+            gainNode.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + 0.1); // Коротке затухання
+            
+            osc.connect(gainNode);
+            gainNode.connect(ctx.destination);
+            
+            osc.start();
+            osc.stop(ctx.currentTime + 0.1); // Тривалість звуку 100 мс
+        } catch (e) {
+            console.log("Звук не підтримується на цьому пристрої");
+        }
+    }
+
+    // Додаємо звук та вібрацію при успішному скануванні
     function addCode(text) {
         if (!scannedCodes.includes(text)) {
             scannedCodes.push(text);
             updateListUI();
-            if (navigator.vibrate) navigator.vibrate(70);
+            playBeep(); // Відтворюємо звук!
+            if (navigator.vibrate) navigator.vibrate(70); // І вібруємо
         }
     }
 
