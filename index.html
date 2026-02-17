@@ -89,7 +89,8 @@
     async function startScanner() {
         const errorDiv = document.getElementById('error-msg');
         const fallbackBtn = document.getElementById('btn-fallback');
-        const config = { fps: 10, qrbox: { width: 250, height: 150 } };
+        // ЗМІНА ТУТ: Рамка тепер квадратна (250x250) для кращого захоплення 2D кодів (Data Matrix)
+        const config = { fps: 10, qrbox: { width: 250, height: 250 } };
         
         try {
             await html5QrCode.start({ facingMode: "environment" }, config, (decodedText) => { addCode(decodedText); });
@@ -127,7 +128,7 @@
         });
     }
 
-    // НОВАЯ ФУНКЦИЯ: Генерирует QR и показывает всплывающее окно
+    // Генерирует QR и показывает всплывающее окно
     function generateQR() {
         if (!scannedCodes.length) return alert(translations[currentLang].alert);
         
