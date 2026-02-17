@@ -39,22 +39,6 @@
         }
         #error-msg { font-size: 13px; color: #e74c3c; margin-top: 10px; display: none; padding: 5px; font-weight: 600; }
 
-        /* --- Індикатор підтвердження --- */
-        #confirm-bar-wrap {
-            margin: 8px 0 0 0;
-            height: 6px;
-            background: #f0f0f0;
-            border-radius: 10px;
-            overflow: hidden;
-            display: none; /* показується під час очікування підтвердження */
-        }
-        #confirm-bar {
-            height: 100%;
-            width: 50%;
-            background: linear-gradient(90deg, #5DADE2, #3498db);
-            border-radius: 10px;
-            transition: width 0.2s ease;
-        }
         
         #scanned-list { 
             list-style: none; padding: 10px; margin: 15px 0; max-height: 140px; 
@@ -101,7 +85,6 @@
     <img src="logo.png" alt="Logo" class="client-logo" id="main-logo" onerror="this.style.display='none'">
     
     <div id="reader"></div>
-    <div id="confirm-bar-wrap"><div id="confirm-bar"></div></div>
     <div id="error-msg"></div>
 
     <input type="file" id="imageUpload" accept="image/*" capture="environment" style="display:none;">
@@ -127,13 +110,30 @@
     let currentLang = 'uk';
 
     // ── ЗАХИСТ ВІД ФАНТАЗІЙ СКАНЕРА ──────────────────────────────
-    const CONFIRM_NEEDED = 2;   // скільки разів підряд треба зчитати один код
-    const SCAN_COOLDOWN  = 2000; // пауза (мс) після успішного додавання
-    const MIN_CODE_LEN   = 3;   // мінімальна довжина коду (сміттєві "фантазії" — зазвичай 1-2 символи)
+    const SCAN_COOLDOWN   = 1500; // пауза (мс) після успішного додавання
+    const MIN_CODE_LEN    = 3;    // мінімальна довжина коду
+    const CONFIRM_WINDOW  = 800;  // мс — вікно для підтвердження не-EAN кодів
 
-    let pendingCode    = null;  // код, що чекає підтвердження
-    let pendingCount   = 0;     // скільки разів підряд він з'явився
-    let cooldownActive = false; // пауза активна?
+    let cooldownActive = false;
+    let pendingCode    = null;    // код-кандидат для не-EAN
+    let pendingTimer   = null;    // таймер скидання кандидата
+    // ─────────────────────────────────────────────────────────────
+
+    // ── ВАЛІДАЦІЯ EAN (контрольна цифра) ─────────────────────────
+    // Для EAN-8 / EAN-13 — перевіряємо математично, миттєво.
+    function isValidEAN(code) {
+        if (!/^\d+$/.test(code)) return false;
+        if (code.length !== 8 && code.length !== 13) return false;
+
+        const digits   = code.split('').map(Number);
+        const last     = digits.pop();
+        const isEAN13  = (code.length + 1) === 13;
+        const sum      = digits.reduce((acc, d, i) => {
+            const w = isEAN13 ? (i % 2 === 0 ? 1 : 3) : (i % 2 === 0 ? 3 : 1);
+            return acc + d * w;
+        }, 0);
+        return (10 - (sum % 10)) % 10 === last;
+    }
     // ─────────────────────────────────────────────────────────────
 
     const translations = {
@@ -170,50 +170,43 @@
 
     // ── ГОЛОВНА ФУНКЦІЯ ОБРОБКИ СКАНУ ────────────────────────────
     function onScanResult(decodedText) {
-        // 1. Ігноруємо під час кулдауну
         if (cooldownActive) return;
 
-        // 2. Ігноруємо занадто короткі результати (сміттєві "фантазії")
-        if (!decodedText || decodedText.trim().length < MIN_CODE_LEN) return;
-
         const text = decodedText.trim();
-
-        // 3. Ігноруємо вже доданий код
+        if (!text || text.length < MIN_CODE_LEN) return;
         if (scannedCodes.includes(text)) return;
 
-        // 4. Логіка підтвердження: код повинен з'явитися CONFIRM_NEEDED разів підряд
-        if (text === pendingCode) {
-            pendingCount++;
-        } else {
-            // Новий кандидат — скидаємо лічильник
-            pendingCode  = text;
-            pendingCount = 1;
+        // Числовий код — перевіряємо контрольну суму EAN миттєво
+        if (/^\d+$/.test(text)) {
+            if (isValidEAN(text)) addCode(text);
+            // не-EAN числові коди (інша довжина) — теж через вікно підтвердження
+            else confirmCode(text);
+            return;
         }
 
-        // Показуємо прогрес-бар підтвердження
-        updateConfirmBar(pendingCount, CONFIRM_NEEDED);
+        // QR / текст / URL — підтверджуємо за вікном 800мс
+        confirmCode(text);
+    }
 
-        // 5. Достатньо підтверджень — додаємо код
-        if (pendingCount >= CONFIRM_NEEDED) {
-            addCode(text);
+    // Код приймається тільки якщо з'явився двічі протягом CONFIRM_WINDOW мс
+    function confirmCode(text) {
+        if (text === pendingCode) {
+            // Другий раз — приймаємо!
+            clearTimeout(pendingTimer);
             pendingCode  = null;
-            pendingCount = 0;
-            hideConfirmBar();
+            pendingTimer = null;
+            addCode(text);
+        } else {
+            // Перший раз — запам'ятовуємо, запускаємо таймер скидання
+            clearTimeout(pendingTimer);
+            pendingCode  = text;
+            pendingTimer = setTimeout(() => {
+                pendingCode  = null;
+                pendingTimer = null;
+            }, CONFIRM_WINDOW);
         }
     }
     // ─────────────────────────────────────────────────────────────
-
-    function updateConfirmBar(current, needed) {
-        const wrap = document.getElementById('confirm-bar-wrap');
-        const bar  = document.getElementById('confirm-bar');
-        wrap.style.display = 'block';
-        bar.style.width = Math.min((current / needed) * 100, 100) + '%';
-    }
-
-    function hideConfirmBar() {
-        document.getElementById('confirm-bar-wrap').style.display = 'none';
-        document.getElementById('confirm-bar').style.width = '0%';
-    }
 
     document.getElementById('imageUpload').addEventListener('change', e => {
         if (e.target.files.length == 0) return;
