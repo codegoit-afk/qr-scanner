@@ -8,30 +8,69 @@
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
-        body { font-family: 'Poppins', sans-serif; margin: 0; padding: 10px; background: linear-gradient(135deg, #2c3e50 0%, #000000 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; color: white; }
-        .container { width: 100%; max-width: 400px; background: #1a1a1a; padding: 20px; border-radius: 24px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); text-align: center; border: 1px solid #333; }
-        .lang-switch { display: flex; justify-content: center; gap: 8px; margin-bottom: 15px; }
-        .lang-btn { padding: 6px 14px; font-size: 12px; border: 1px solid #444; border-radius: 15px; background: #222; cursor: pointer; color: #aaa; transition: 0.3s; }
-        .lang-btn.active { background: #3498db; color: #fff; border-color: #3498db; }
+        /* --- ПРЕМІАЛЬНА СВІТЛА ТЕМА --- */
+        body { 
+            font-family: 'Poppins', sans-serif; margin: 0; padding: 10px; 
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%); /* Дорогий світлий фон */
+            min-height: 100vh; display: flex; align-items: center; justify-content: center; color: #333; 
+        }
+        .container { 
+            width: 100%; max-width: 400px; 
+            background: #ffffff; /* Ідеально білий контейнер, щоб сховати фон логотипу */
+            padding: 25px 20px; border-radius: 24px; 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08); /* М'яка "яблучна" тінь */
+            text-align: center; box-sizing: border-box;
+        }
+        .lang-switch { display: flex; justify-content: center; gap: 8px; margin-bottom: 20px; }
+        .lang-btn { 
+            padding: 6px 14px; font-size: 12px; font-weight: 600; border: 1px solid #e0e0e0; 
+            border-radius: 15px; background: #f8f9fa; cursor: pointer; color: #888; transition: 0.3s; 
+        }
+        .lang-btn.active { 
+            background: #5DADE2; /* Колір під ваше лого */
+            color: #fff; border-color: #5DADE2; box-shadow: 0 4px 10px rgba(93, 173, 226, 0.3);
+        }
         
         /* Стили для логотипа-картинки */
-        .client-logo { max-width: 150px; max-height: 60px; margin-bottom: 15px; object-fit: contain; }
+        .client-logo { max-width: 160px; max-height: 60px; margin-bottom: 20px; object-fit: contain; }
         
-        #reader { width: 100%; border-radius: 16px; overflow: hidden; border: 2px dashed #3498db !important; background: #000; min-height: 250px; position: relative; }
-        #error-msg { font-size: 13px; color: #f1c40f; margin-top: 10px; display: none; padding: 5px; }
-        #scanned-list { list-style: none; padding: 10px; margin: 15px 0; max-height: 140px; overflow-y: auto; background: #222; border-radius: 12px; text-align: left; }
-        #scanned-list li { padding: 8px; background: #2a2a2a; margin-bottom: 5px; border-radius: 8px; font-family: monospace; font-size: 14px; border-left: 4px solid #3498db; color: #eee; }
-        .buttons { display: flex; justify-content: space-between; margin-bottom: 5px; }
-        button { padding: 14px; border: none; background: linear-gradient(135deg, #3498db, #2980b9); color: #fff; border-radius: 25px; cursor: pointer; font-size: 15px; width: 48%; font-weight: 600; }
-        button.clear-btn { background: linear-gradient(135deg, #ff6b6b, #ee5253); }
-        #btn-fallback { background: linear-gradient(135deg, #f39c12, #d35400); width: 100%; margin-top: 10px; display: none; }
+        #reader { 
+            width: 100%; border-radius: 16px; overflow: hidden; 
+            border: 2px dashed #b0bec5 !important; background: #fcfcfc; min-height: 250px; position: relative; 
+        }
+        #error-msg { font-size: 13px; color: #e74c3c; margin-top: 10px; display: none; padding: 5px; font-weight: 600; }
+        
+        #scanned-list { 
+            list-style: none; padding: 10px; margin: 15px 0; max-height: 140px; 
+            overflow-y: auto; background: #ffffff; border: 1px solid #f0f0f0; border-radius: 12px; text-align: left; 
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.02);
+        }
+        #scanned-list li { 
+            padding: 10px; background: #f8f9fa; margin-bottom: 6px; border-radius: 8px; 
+            font-family: monospace; font-size: 14px; border-left: 4px solid #5DADE2; color: #333; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+        
+        .buttons { display: flex; justify-content: space-between; margin-bottom: 5px; margin-top: 20px; }
+        button { 
+            padding: 14px; border: none; background: linear-gradient(135deg, #5DADE2, #3498db); 
+            color: #fff; border-radius: 25px; cursor: pointer; font-size: 15px; width: 48%; font-weight: 600; 
+            box-shadow: 0 6px 15px rgba(52, 152, 219, 0.3); transition: transform 0.1s;
+        }
+        button:active { transform: scale(0.97); }
+        button.clear-btn { 
+            background: linear-gradient(135deg, #ff758c, #ff7eb3); 
+            box-shadow: 0 6px 15px rgba(255, 117, 140, 0.3);
+        }
+        
+        #btn-fallback { background: linear-gradient(135deg, #f39c12, #e67e22); width: 100%; margin-top: 10px; display: none; box-shadow: 0 6px 15px rgba(243, 156, 18, 0.3); }
         
         /* --- СТИЛИ ДЛЯ ВСПЛЫВАЮЩЕГО ОКНА (МОДАЛКИ) --- */
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
-        .modal-content { background: #fff; padding: 25px; border-radius: 20px; text-align: center; position: relative; color: #222; box-shadow: 0 10px 40px rgba(0,0,0,0.5); animation: popIn 0.3s ease-out; }
-        .close-btn { position: absolute; top: 10px; right: 15px; font-size: 28px; font-weight: bold; color: #888; cursor: pointer; line-height: 1; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
+        .modal-content { background: #fff; padding: 30px; border-radius: 24px; text-align: center; position: relative; color: #222; box-shadow: 0 15px 50px rgba(0,0,0,0.2); animation: popIn 0.3s ease-out; }
+        .close-btn { position: absolute; top: 15px; right: 20px; font-size: 28px; font-weight: bold; color: #bdc3c7; cursor: pointer; line-height: 1; transition: 0.2s; }
         .close-btn:hover { color: #e74c3c; }
-        #modal-qrcode { display: flex; justify-content: center; margin-top: 15px; padding: 10px; }
+        #modal-qrcode { display: flex; justify-content: center; margin-top: 20px; padding: 10px; }
         @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
     </style>
 </head>
@@ -61,7 +100,7 @@
 <div id="qrModal" class="modal-overlay" onclick="closeModal(event)">
     <div class="modal-content" onclick="event.stopPropagation()">
         <span class="close-btn" onclick="closeModal(event)">&times;</span>
-        <h3 id="modal-title" style="margin-top:0; font-size:18px;">Готовий код</h3>
+        <h3 id="modal-title" style="margin-top:0; font-size:18px; font-weight:600; color:#2c3e50;">Готовий код</h3>
         <div id="modal-qrcode"></div>
     </div>
 </div>
@@ -110,7 +149,7 @@
         e.target.value = '';
     });
 
-    // --- НОВА ФУНКЦІЯ: Звук "Пік!" ---
+    // --- Звук "Пік!" ---
     function playBeep() {
         try {
             const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -119,35 +158,34 @@
             const osc = ctx.createOscillator();
             const gainNode = ctx.createGain();
             
-            osc.type = 'sine'; // Чистий тон
-            osc.frequency.setValueAtTime(800, ctx.currentTime); // Частота звуку
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(800, ctx.currentTime);
             
-            gainNode.gain.setValueAtTime(0.1, ctx.currentTime); // Гучність
-            gainNode.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + 0.1); // Коротке затухання
+            gainNode.gain.setValueAtTime(0.1, ctx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + 0.1);
             
             osc.connect(gainNode);
             gainNode.connect(ctx.destination);
             
             osc.start();
-            osc.stop(ctx.currentTime + 0.1); // Тривалість звуку 100 мс
+            osc.stop(ctx.currentTime + 0.1);
         } catch (e) {
             console.log("Звук не підтримується на цьому пристрої");
         }
     }
 
-    // Додаємо звук та вібрацію при успішному скануванні
     function addCode(text) {
         if (!scannedCodes.includes(text)) {
             scannedCodes.push(text);
             updateListUI();
-            playBeep(); // Відтворюємо звук!
-            if (navigator.vibrate) navigator.vibrate(70); // І вібруємо
+            playBeep();
+            if (navigator.vibrate) navigator.vibrate(70);
         }
     }
 
     function updateListUI() {
         const list = document.getElementById('scanned-list');
-        list.innerHTML = scannedCodes.length ? '' : `<li style="border:none;color:#666;text-align:center">${translations[currentLang].placeholder}</li>`;
+        list.innerHTML = scannedCodes.length ? '' : `<li style="border:none;color:#999;text-align:center;background:transparent;box-shadow:none;">${translations[currentLang].placeholder}</li>`;
         scannedCodes.forEach(code => {
             const li = document.createElement('li');
             li.innerText = code;
@@ -155,26 +193,21 @@
         });
     }
 
-    // Генерирует QR и показывает всплывающее окно
     function generateQR() {
         if (!scannedCodes.length) return alert(translations[currentLang].alert);
         
-        // Очищаем старый код
         const qrContainer = document.getElementById("modal-qrcode");
         qrContainer.innerHTML = "";
         
-        // Генерируем новый (с символом \n между кодами и в конце)
         new QRCode(qrContainer, { 
             text: scannedCodes.join('\n') + '\n', 
             width: 220, 
             height: 220 
         });
         
-        // Показываем окно
         document.getElementById("qrModal").style.display = "flex";
     }
 
-    // Закрытие окна
     function closeModal(event) {
         document.getElementById("qrModal").style.display = "none";
     }
