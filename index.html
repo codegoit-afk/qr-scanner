@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CODE>ON Scanner</title>
+    <title>Scanner App</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -12,18 +12,27 @@
         .container { width: 100%; max-width: 400px; background: #1a1a1a; padding: 20px; border-radius: 24px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); text-align: center; border: 1px solid #333; }
         .lang-switch { display: flex; justify-content: center; gap: 8px; margin-bottom: 15px; }
         .lang-btn { padding: 6px 14px; font-size: 12px; border: 1px solid #444; border-radius: 15px; background: #222; cursor: pointer; color: #aaa; transition: 0.3s; }
-        .lang-btn.active { background: #3498db; color: #fff; border-color: #3498db; box-shadow: 0 0 10px rgba(52, 152, 219, 0.5); }
-        .logo { font-size: 26px; font-weight: 700; margin-bottom: 15px; color: #fff; }
-        .logo span { color: #3498db; }
+        .lang-btn.active { background: #3498db; color: #fff; border-color: #3498db; }
+        
+        /* Стили для логотипа-картинки */
+        .client-logo { max-width: 150px; max-height: 60px; margin-bottom: 15px; object-fit: contain; }
+        
         #reader { width: 100%; border-radius: 16px; overflow: hidden; border: 2px dashed #3498db !important; background: #000; min-height: 250px; position: relative; }
-        #error-msg { font-size: 12px; color: #ff6b6b; margin-top: 10px; display: none; padding: 5px; }
-        #scanned-list { list-style: none; padding: 10px; margin: 15px 0; max-height: 120px; overflow-y: auto; background: #222; border-radius: 12px; text-align: left; }
+        #error-msg { font-size: 13px; color: #f1c40f; margin-top: 10px; display: none; padding: 5px; }
+        #scanned-list { list-style: none; padding: 10px; margin: 15px 0; max-height: 140px; overflow-y: auto; background: #222; border-radius: 12px; text-align: left; }
         #scanned-list li { padding: 8px; background: #2a2a2a; margin-bottom: 5px; border-radius: 8px; font-family: monospace; font-size: 14px; border-left: 4px solid #3498db; color: #eee; }
-        .buttons { display: flex; justify-content: space-between; margin-bottom: 15px; }
-        button { padding: 14px; border: none; background: linear-gradient(135deg, #3498db, #2980b9); color: #fff; border-radius: 25px; cursor: pointer; font-size: 15px; width: 48%; font-weight: 600; box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3); }
-        button.clear-btn { background: linear-gradient(135deg, #ff6b6b, #ee5253); box-shadow: 0 4px 15px rgba(238, 82, 83, 0.3); }
-        #qrcode { display: flex; justify-content: center; margin-top: 15px; }
-        #qrcode img { border-radius: 12px; padding: 10px; background: #fff; }
+        .buttons { display: flex; justify-content: space-between; margin-bottom: 5px; }
+        button { padding: 14px; border: none; background: linear-gradient(135deg, #3498db, #2980b9); color: #fff; border-radius: 25px; cursor: pointer; font-size: 15px; width: 48%; font-weight: 600; }
+        button.clear-btn { background: linear-gradient(135deg, #ff6b6b, #ee5253); }
+        #btn-fallback { background: linear-gradient(135deg, #f39c12, #d35400); width: 100%; margin-top: 10px; display: none; }
+        
+        /* --- СТИЛИ ДЛЯ ВСПЛЫВАЮЩЕГО ОКНА (МОДАЛКИ) --- */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        .modal-content { background: #fff; padding: 25px; border-radius: 20px; text-align: center; position: relative; color: #222; box-shadow: 0 10px 40px rgba(0,0,0,0.5); animation: popIn 0.3s ease-out; }
+        .close-btn { position: absolute; top: 10px; right: 15px; font-size: 28px; font-weight: bold; color: #888; cursor: pointer; line-height: 1; }
+        .close-btn:hover { color: #e74c3c; }
+        #modal-qrcode { display: flex; justify-content: center; margin-top: 15px; padding: 10px; }
+        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
     </style>
 </head>
 <body>
@@ -33,26 +42,37 @@
         <button class="lang-btn" onclick="setLang('ru')">RU</button>
         <button class="lang-btn" onclick="setLang('en')">EN</button>
     </div>
-    <div class="logo">CODE<span>></span>ON</div>
+    
+    <img src="logo.png" alt="Logo" class="client-logo" id="main-logo" onerror="this.style.display='none'">
     
     <div id="reader"></div>
     <div id="error-msg"></div>
+
+    <input type="file" id="imageUpload" accept="image/*" capture="environment" style="display:none;">
+    <button id="btn-fallback" onclick="document.getElementById('imageUpload').click()">📸 Сканувати через фото</button>
 
     <ul id="scanned-list"></ul>
     <div class="buttons">
         <button id="btn-make" onclick="generateQR()">Make QR</button>
         <button id="btn-clear" class="clear-btn" onclick="clearList()">Clear</button>
     </div>
-    <div id="qrcode"></div>
+</div>
+
+<div id="qrModal" class="modal-overlay" onclick="closeModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <span class="close-btn" onclick="closeModal(event)">&times;</span>
+        <h3 id="modal-title" style="margin-top:0; font-size:18px;">Готовий код</h3>
+        <div id="modal-qrcode"></div>
+    </div>
 </div>
 
 <script>
     let scannedCodes = [];
     let currentLang = 'uk';
     const translations = {
-        uk: { make: "Зробити QR", clear: "Очистити", alert: "Список порожній!", placeholder: "Список порожній" },
-        ru: { make: "Создать QR", clear: "Очистить", alert: "Список пуст!", placeholder: "Список пуст" },
-        en: { make: "Make QR", clear: "Clear", alert: "List is empty!", placeholder: "List is empty" }
+        uk: { make: "Зробити QR", clear: "Очистити", alert: "Список порожній!", placeholder: "Список порожній", modalTitle: "Ваш QR-код" },
+        ru: { make: "Создать QR", clear: "Очистить", alert: "Список пуст!", placeholder: "Список пуст", modalTitle: "Ваш QR-код" },
+        en: { make: "Make QR", clear: "Clear", alert: "List is empty!", placeholder: "List is empty", modalTitle: "Your QR Code" }
     };
 
     function setLang(lang) {
@@ -60,6 +80,7 @@
         document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.toggle('active', btn.innerText.toLowerCase() === lang));
         document.getElementById('btn-make').innerText = translations[lang].make;
         document.getElementById('btn-clear').innerText = translations[lang].clear;
+        document.getElementById('modal-title').innerText = translations[lang].modalTitle;
         updateListUI();
     }
 
@@ -67,32 +88,32 @@
 
     async function startScanner() {
         const errorDiv = document.getElementById('error-msg');
-        const config = { fps: 15, qrbox: { width: 250, height: 150 } };
+        const fallbackBtn = document.getElementById('btn-fallback');
+        const config = { fps: 10, qrbox: { width: 250, height: 150 } };
         
         try {
-            // Сначала пробуем запросить доступ через браузерное API (важно для WebView)
-            await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-            
-            await html5QrCode.start(
-                { facingMode: "environment" }, 
-                config, 
-                (decodedText) => {
-                    if (!scannedCodes.includes(decodedText)) {
-                        scannedCodes.push(decodedText);
-                        updateListUI();
-                        if (navigator.vibrate) navigator.vibrate(70);
-                    }
-                }
-            );
+            await html5QrCode.start({ facingMode: "environment" }, config, (decodedText) => { addCode(decodedText); });
         } catch (err) {
+            document.getElementById('reader').style.display = 'none';
             errorDiv.style.display = "block";
-            errorDiv.innerText = "Камера недоступна: " + err;
-            // Попытка №2: любая камера
-            html5QrCode.start({ facingMode: "user" }, config, (decodedText) => {
-                if (!scannedCodes.includes(decodedText)) { scannedCodes.push(decodedText); updateListUI(); }
-            }).catch(e => {
-                errorDiv.innerText = "Помилка доступу. Перевірте дозволи додатку!";
-            });
+            errorDiv.innerHTML = "Android заблокував відео. Використовуйте безпечний режим:";
+            fallbackBtn.style.display = "block";
+        }
+    }
+
+    document.getElementById('imageUpload').addEventListener('change', e => {
+        if (e.target.files.length == 0) return;
+        html5QrCode.scanFile(e.target.files[0], true)
+        .then(decodedText => { addCode(decodedText); })
+        .catch(err => { alert("Код не розпізнано. Спробуйте ще раз."); });
+        e.target.value = '';
+    });
+
+    function addCode(text) {
+        if (!scannedCodes.includes(text)) {
+            scannedCodes.push(text);
+            updateListUI();
+            if (navigator.vibrate) navigator.vibrate(70);
         }
     }
 
@@ -106,22 +127,35 @@
         });
     }
 
+    // НОВАЯ ФУНКЦИЯ: Генерирует QR и показывает всплывающее окно
     function generateQR() {
         if (!scannedCodes.length) return alert(translations[currentLang].alert);
-        document.getElementById("qrcode").innerHTML = "";
-        new QRCode(document.getElementById("qrcode"), {
-            text: scannedCodes.join('\n') + '\n',
-            width: 200, height: 200
+        
+        // Очищаем старый код
+        const qrContainer = document.getElementById("modal-qrcode");
+        qrContainer.innerHTML = "";
+        
+        // Генерируем новый (с символом \n между кодами и в конце)
+        new QRCode(qrContainer, { 
+            text: scannedCodes.join('\n') + '\n', 
+            width: 220, 
+            height: 220 
         });
+        
+        // Показываем окно
+        document.getElementById("qrModal").style.display = "flex";
+    }
+
+    // Закрытие окна
+    function closeModal(event) {
+        document.getElementById("qrModal").style.display = "none";
     }
 
     function clearList() {
-        scannedCodes = [];
-        updateListUI();
-        document.getElementById("qrcode").innerHTML = "";
+        scannedCodes = []; 
+        updateListUI(); 
     }
 
-    // Задержка перед стартом, чтобы WebView успел прогрузиться
     setTimeout(startScanner, 1000);
 </script>
 </body>
